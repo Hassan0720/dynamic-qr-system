@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redirecting - Dynamic QR</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f7f6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            text-align: center;
+        }
+        .message-box {
+            background: #ffffff;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            width: 100%;
+        }
+        h2 { color: #333; margin-bottom: 10px; }
+        p { color: #666; font-size: 15px; }
+        .error { color: #dc3545; font-weight: bold; }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #007bff;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="message-box" id="box">
+        <div class="spinner" id="loadingSpinner"></div>
+        <h2 id="title">Please wait...</h2>
+        <p id="message">Connecting to destination...</p>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        window.onload = async function() {
+            // URL से QR ID निकालने का तरीका (उदा. /qr.html?id=K42Z-MR84 या पाथ-बेस्ड लॉजिक)
+            const urlParams = new URLSearchParams(window.location.search);
+            let qrId = urlParams.get('id');
+
+            // यदि आप Vercel रीराइट्स (Rewrites) का उपयोग कर रहे हैं और URL /qr/K42Z-MR84 है:
+            if (!qrId) {
+                const pathParts = window.location.pathname.split('/');
+                const qrIndex = pathParts.indexOf('qr');
+                if (qrIndex !== -1 && pathParts[qrIndex + 1]) {
+                    qrId = pathParts[qrIndex + 1];
+                }
+            }
+
+            if (!qrId) {
+                showError("Invalid QR Code URL.");
+                return;
+            }
+
+            // बैकएंड से डेस्टिनेशन URL फेच करें
+            let result = await resolveQRId(qrId);
+
+            if (result.status === "success" && result.destinationUrl) {
+                document.getElementById("title").innerText = "Redirecting...";
+                document.getElementById("message").innerText = "Taking you to the destination website.";
+                // फुल रीडायरेक्ट
+                window.location.replace(result.destinationUrl);
+            } else {
+                showError(result.message || "QR Code is invalid, inactive, or expired.");
+            }
+        };
+
+        function showError(msg) {
+            document.getElementById("loadingSpinner").style.display = "none";
+            document.getElementById("title").innerText = "Access Denied";
+            let p = document.getElementById("message");
+            p.className = "error";
+            p.innerText = msg;
+        }
+    </script>
+</body>
+</html>
