@@ -82,7 +82,6 @@
 </head>
 <body>
 
-    <!-- Security Check Script -->
     <script>
         if (sessionStorage.getItem("isAdminLoggedIn") !== "true") {
             window.location.href = "index.html";
@@ -95,7 +94,6 @@
     </div>
 
     <div class="container">
-        <!-- Add QR Form Section -->
         <div class="form-section">
             <h3>Register New QR Code</h3>
             <form id="addQRForm">
@@ -132,7 +130,6 @@
             </form>
         </div>
 
-        <!-- QR List Table -->
         <h3>Existing QR Codes</h3>
         <table>
             <thead>
@@ -152,32 +149,32 @@
 
     <script src="script.js"></script>
     <script>
-        // Page Load होते ही नया Random ID जनरेट करें और लिस्ट लोड करें
         window.onload = function() {
             document.getElementById("qrId").value = generateRandomQRId();
             loadQRTable();
         };
 
-        // Logout Function
         function logout() {
             sessionStorage.removeItem("isAdminLoggedIn");
             window.location.href = "index.html";
         }
 
-        // Load QR Table Data
         async function loadQRTable() {
-            let result = await fetchQRs();
             let tbody = document.getElementById("qrTableBody");
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align: center;">Loading...</td></tr>`;
+
+            let result = await fetchQRs();
             tbody.innerHTML = "";
 
-            if (result.status === "success" && result.data.length > 0) {
+            if (result.status === "success" && result.data && result.data.length > 0) {
                 result.data.forEach(qr => {
+                    let formattedDate = qr.expiryDate ? new Date(qr.expiryDate).toLocaleDateString() : '';
                     let tr = document.createElement("tr");
                     tr.innerHTML = `
                         <td><strong>${qr.qrId}</strong></td>
                         <td>${qr.qrName}</td>
                         <td><a href="${qr.destinationUrl}" target="_blank">${qr.destinationUrl}</a></td>
-                        <td>${new Date(qr.expiryDate).toLocaleDateString()}</td>
+                        <td>${formattedDate}</td>
                         <td><span style="color: ${qr.status === 'Active' ? 'green' : 'red'};">${qr.status}</span></td>
                     `;
                     tbody.appendChild(tr);
@@ -187,7 +184,6 @@
             }
         }
 
-        // Add QR Form Submission
         document.getElementById("addQRForm").addEventListener("submit", async function(e) {
             e.preventDefault();
             let saveBtn = document.getElementById("saveBtn");
@@ -207,7 +203,7 @@
             if (result.status === "success") {
                 alert("QR Code Registered Successfully!");
                 document.getElementById("addQRForm").reset();
-                document.getElementById("qrId").value = generateRandomQRId(); // नया ID जनरेट करें
+                document.getElementById("qrId").value = generateRandomQRId();
                 loadQRTable();
             } else {
                 alert("Error: " + result.message);
