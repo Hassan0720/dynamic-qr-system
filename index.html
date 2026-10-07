@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - Dynamic QR Management</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f7f6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .login-card {
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 350px;
+        }
+        .login-card h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 22px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #666;
+            font-size: 14px;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .btn-login {
+            width: 100%;
+            padding: 10px;
+            background-color: #007bff;
+            border: none;
+            color: white;
+            font-size: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .btn-login:hover {
+            background-color: #0056b3;
+        }
+        .error-msg {
+            color: red;
+            text-align: center;
+            font-size: 13px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="login-card">
+        <h2>Dynamic QR Management</h2>
+        <form id="loginForm">
+            <div class="form-group">
+                <label>User ID</label>
+                <input type="text" id="userId" required placeholder="Enter User ID">
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="password" required placeholder="Enter Password">
+            </div>
+            <button type="submit" class="btn-login" id="loginBtn">LOGIN</button>
+            <div id="errorMsg" class="error-msg"></div>
+        </form>
+    </div>
+
+    <!-- Script.js को जोड़ा गया है -->
+    <script src="script.js"></script>
+    <script>
+        document.getElementById("loginForm").addEventListener("submit", async function(e) {
+            e.preventDefault();
+            const userId = document.getElementById("userId").value;
+            const password = document.getElementById("password").value;
+            const errorMsg = document.getElementById("errorMsg");
+            const loginBtn = document.getElementById("loginBtn");
+
+            loginBtn.innerText = "Checking...";
+            loginBtn.disabled = true;
+            errorMsg.innerText = "";
+
+            let result = await handleLogin(userId, password);
+
+            if (result.status === "success") {
+                // सफलतापूर्वक लॉगिन होने पर sessionStorage में सेव करें और डैशबोर्ड पर भेजें
+                sessionStorage.setItem("isAdminLoggedIn", "true");
+                window.location.href = "dashboard.html";
+            } else {
+                errorMsg.innerText = result.message || "Invalid User ID or Password";
+                loginBtn.innerText = "LOGIN";
+                loginBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
