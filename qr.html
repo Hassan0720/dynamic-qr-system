@@ -52,11 +52,9 @@
     <script src="script.js"></script>
     <script>
         window.onload = async function() {
-            // URL से QR ID निकालने का तरीका (उदा. /qr.html?id=K42Z-MR84 या पाथ-बेस्ड लॉजिक)
             const urlParams = new URLSearchParams(window.location.search);
             let qrId = urlParams.get('id');
 
-            // यदि आप Vercel रीराइट्स (Rewrites) का उपयोग कर रहे हैं और URL /qr/K42Z-MR84 है:
             if (!qrId) {
                 const pathParts = window.location.pathname.split('/');
                 const qrIndex = pathParts.indexOf('qr');
@@ -70,13 +68,11 @@
                 return;
             }
 
-            // बैकएंड से डेस्टिनेशन URL फेच करें
             let result = await resolveQRId(qrId);
 
             if (result.status === "success" && result.destinationUrl) {
                 document.getElementById("title").innerText = "Redirecting...";
                 document.getElementById("message").innerText = "Taking you to the destination website.";
-                // फुल रीडायरेक्ट
                 window.location.replace(result.destinationUrl);
             } else {
                 showError(result.message || "QR Code is invalid, inactive, or expired.");
