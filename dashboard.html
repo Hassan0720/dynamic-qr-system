@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Dynamic QR Management</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f7f6;
+            margin: 0;
+            padding: 20px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #ffffff;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+        .header h2 { margin: 0; color: #333; font-size: 20px; }
+        .btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .btn-primary { background-color: #28a745; color: white; }
+        .btn-danger { background-color: #dc3545; color: white; }
+        .btn:hover { opacity: 0.9; }
+
+        .container {
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .form-section {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            border: 1px solid #e1e1e1;
+        }
+        .form-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+        .form-group {
+            flex: 1;
+            min-width: 200px;
+        }
+        .form-group label { display: block; margin-bottom: 5px; font-size: 13px; color: #555; }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        table, th, td {
+            border: 1px solid #e1e1e1;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+            font-size: 14px;
+        }
+        th { background-color: #f1f1f1; color: #333; }
+    </style>
+</head>
+<body>
+
+    <!-- Security Check Script -->
+    <script>
+        if (sessionStorage.getItem("isAdminLoggedIn") !== "true") {
+            window.location.href = "index.html";
+        }
+    </script>
+
+    <div class="header">
+        <h2>DYNAMIC QR MANAGEMENT DASHBOARD</h2>
+        <button class="btn btn-danger" onclick="logout()">LOGOUT</button>
+    </div>
+
+    <div class="container">
+        <!-- Add QR Form Section -->
+        <div class="form-section">
+            <h3>Register New QR Code</h3>
+            <form id="addQRForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>QR ID (Auto Generated)</label>
+                        <input type="text" id="qrId" readonly style="background-color: #e9ecef;">
+                    </div>
+                    <div class="form-group">
+                        <label>QR Name</label>
+                        <input type="text" id="qrName" required placeholder="e.g. My Business Page">
+                    </div>
+                    <div class="form-group">
+                        <label>Destination URL</label>
+                        <input type="url" id="destinationUrl" required placeholder="https://example.com">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Expiry Date</label>
+                        <input type="date" id="expiryDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Status</label>
+                        <select id="status">
+                            <option value="Active">Active</option>
+                            <option value="Inactive">Inactive</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="display: flex; align-items: flex-end;">
+                        <button type="submit" class="btn btn-primary" style="width: 100%;" id="saveBtn">ACTIVATE QR</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- QR List Table -->
+        <h3>Existing QR Codes</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>QR ID</th>
+                    <th>Name</th>
+                    <th>Destination URL</th>
+                    <th>Expiry Date</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="qrTableBody">
+                <tr><td colspan="5" style="text-align: center;">Loading...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        // Page Load होते ही नया Random ID जनरेट करें और लिस्ट लोड करें
+        window.onload = function() {
+            document.getElementById("qrId").value = generateRandomQRId();
+            loadQRTable();
+        };
+
+        // Logout Function
+        function logout() {
+            sessionStorage.removeItem("isAdminLoggedIn");
+            window.location.href = "index.html";
+        }
+
+        // Load QR Table Data
+        async function loadQRTable() {
+            let result = await fetchQRs();
+            let tbody = document.getElementById("qrTableBody");
+            tbody.innerHTML = "";
+
+            if (result.status === "success" && result.data.length > 0) {
+                result.data.forEach(qr => {
+                    let tr = document.createElement("tr");
+                    tr.innerHTML = `
+                        <td><strong>${qr.qrId}</strong></td>
+                        <td>${qr.qrName}</td>
+                        <td><a href="${qr.destinationUrl}" target="_blank">${qr.destinationUrl}</a></td>
+                        <td>${new Date(qr.expiryDate).toLocaleDateString()}</td>
+                        <td><span style="color: ${qr.status === 'Active' ? 'green' : 'red'};">${qr.status}</span></td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } else {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center;">No QR codes found.</td></tr>`;
+            }
+        }
+
+        // Add QR Form Submission
+        document.getElementById("addQRForm").addEventListener("submit", async function(e) {
+            e.preventDefault();
+            let saveBtn = document.getElementById("saveBtn");
+            saveBtn.innerText = "Saving...";
+            saveBtn.disabled = true;
+
+            let qrData = {
+                qrId: document.getElementById("qrId").value,
+                qrName: document.getElementById("qrName").value,
+                destinationUrl: document.getElementById("destinationUrl").value,
+                expiryDate: document.getElementById("expiryDate").value,
+                status: document.getElementById("status").value
+            };
+
+            let result = await addQRCode(qrData);
+
+            if (result.status === "success") {
+                alert("QR Code Registered Successfully!");
+                document.getElementById("addQRForm").reset();
+                document.getElementById("qrId").value = generateRandomQRId(); // नया ID जनरेट करें
+                loadQRTable();
+            } else {
+                alert("Error: " + result.message);
+            }
+            saveBtn.innerText = "ACTIVATE QR";
+            saveBtn.disabled = false;
+        });
+    </script>
+</body>
+</html>
