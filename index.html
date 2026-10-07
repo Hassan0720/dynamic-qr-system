@@ -83,7 +83,6 @@
         </form>
     </div>
 
-    <!-- Script.js को जोड़ा गया है -->
     <script src="script.js"></script>
     <script>
         document.getElementById("loginForm").addEventListener("submit", async function(e) {
@@ -100,7 +99,6 @@
             let result = await handleLogin(userId, password);
 
             if (result.status === "success") {
-                // सफलतापूर्वक लॉगिन होने पर sessionStorage में सेव करें और डैशबोर्ड पर भेजें
                 sessionStorage.setItem("isAdminLoggedIn", "true");
                 window.location.href = "dashboard.html";
             } else {
